@@ -150,10 +150,17 @@ Ohai.plugin(:Network) do
 
     so = shell_out("route -n get default")
     so.stdout.lines do |line|
-      matches = /interface: (\S+)/.match(line)
+      matches = /interface: (?<def_route_interface>\S+)/.match(line)
       if matches
+        # Within a zone, `route -n get default` will produce the zonehost's
+        # interface name ("net0"), not the zone's specific iteration of it ("net0:3").
+        # This pairs the two and allows node['ipaddress'] to be populated correctly
+        # by the default network.rb plugin.
+        actual_default_interface = network[:interfaces].select do |v, vi|
+          v.include? matches[:def_route_interface]
+        end
         Ohai::Log.debug("found gateway device: #{$1}")
-        network[:default_interface] = matches[1]
+        network[:default_interface] = actual_default_interface.keys.first
       end
       matches = /gateway: (\S+)/.match(line)
       if matches
