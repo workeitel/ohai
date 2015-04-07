@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
   s.add_dependency "mixlib-log"
   s.add_dependency "mixlib-shellout", "~> 2.0"
   s.add_dependency "ipaddress"
-  s.add_dependency "wmi-lite", "~> 1.0"
+  #s.add_dependency "wmi-lite", "~> 1.0"
   s.add_dependency "ffi", "~> 1.9"
 
   s.add_dependency "rake", "~> 10.1"
@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rspec-mocks", "~> 3.0"
   s.add_development_dependency "rspec-collection_matchers", "~> 1.0"
 #  s.add_development_dependency "rspec_junit_formatter"
-  s.add_development_dependency "chef"
+  #s.add_development_dependency "chef"
   s.bindir = "bin"
   s.executables = %w(ohai)
 

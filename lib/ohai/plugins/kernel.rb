@@ -155,51 +155,19 @@ Ohai.plugin(:Kernel) do
   end
 
   collect_data(:windows) do
-    require 'win32ole'
-    require 'wmi-lite/wmi'
-
-    WIN32OLE.codepage = WIN32OLE::CP_UTF8
-
-    wmi = WmiLite::Wmi.new
+    properties = {}
+    shell_out("systeminfo").stdout.each_line do |line|
+       kv = line.strip.split(/:\s+/, 2)
+       properties[kv[0]] = kv[1]
+    end
 
     kernel Mash.new
 
-    host = wmi.first_of('Win32_OperatingSystem')
-    kernel[:os_info] = Mash.new
-    host.wmi_ole_object.properties_.each do |p|
-      kernel[:os_info][p.name.wmi_underscore.to_sym] = host[p.name.downcase]
-    end
+    kernel[:name] = properties["OS Name"]
+    kernel[:release] = properties["OS Version"].split(' ')[0]
+    kernel[:version] = properties["OS Version"]
+    kernel[:os] = "WINNT"
+    kernel[:machine] = "x86_64"
 
-    kernel[:name] = "#{kernel[:os_info][:caption]}"
-    kernel[:release] = "#{kernel[:os_info][:version]}"
-    kernel[:version] = "#{kernel[:os_info][:version]} #{kernel[:os_info][:csd_version]} Build #{kernel[:os_info][:build_number]}"
-    kernel[:os] = os_lookup(kernel[:os_info][:os_type]) || languages[:ruby][:host_os]
-
-    host = wmi.first_of('Win32_ComputerSystem')
-    kernel[:cs_info] = Mash.new
-    host.wmi_ole_object.properties_.each do |p|
-      kernel[:cs_info][p.name.wmi_underscore.to_sym] = host[p.name.downcase]
-    end
-
-    kernel[:machine] = machine_lookup("#{kernel[:cs_info][:system_type]}")
-
-    kext = Mash.new
-    pnp_drivers = Mash.new
-
-    drivers = wmi.instances_of('Win32_PnPSignedDriver')
-    drivers.each do |driver|
-      pnp_drivers[driver['deviceid']] = Mash.new
-      driver.wmi_ole_object.properties_.each do |p|
-        pnp_drivers[driver['deviceid']][p.name.wmi_underscore.to_sym] = driver[p.name.downcase]
-      end
-      if driver['devicename']
-        kext[driver['devicename']] = pnp_drivers[driver['deviceid']]
-        kext[driver['devicename']][:version] = pnp_drivers[driver['deviceid']][:driver_version]
-        kext[driver['devicename']][:date] = pnp_drivers[driver['deviceid']][:driver_date] ? pnp_drivers[driver['deviceid']][:driver_date].to_s[0..7] : nil
-      end
-    end
-
-    kernel[:pnp_drivers] = pnp_drivers
-    kernel[:modules] = kext
   end
 end
