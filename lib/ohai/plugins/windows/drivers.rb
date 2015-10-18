@@ -20,6 +20,11 @@ Ohai.plugin(:Drivers) do
   depends "kernel"
 
   collect_data(:windows) do
+    if ! hint?('win32_pnp_signed_driver')
+      Ohai::Log.debug("Skipping Win32_PnpSignedDriver in absence of `win32_pnp_signed_driver` hint")
+      return
+    end
+
     require 'wmi-lite/wmi'
 
     wmi = WmiLite::Wmi.new
